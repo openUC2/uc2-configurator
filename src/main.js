@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import SuiVue from 'semantic-ui-vue'
 import App from './App.vue'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 Vue.use(SuiVue);
 Vue.config.productionTip = false
