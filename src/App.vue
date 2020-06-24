@@ -4,7 +4,7 @@
         
 	<Configurator> </Configurator>
     </div>
-    <footer class="page-footer fixed-bottom"> <div class="container text-center"><span class="text-muted">
+    <footer class="page-footer"> <div class="container text-center"><span class="text-muted">
         Alec Vercruysse &middot; <a href="https://github.com/AlecVercruysse/uc2-configurator">github</a>
     </span></div></footer>
     </div>

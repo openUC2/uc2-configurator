@@ -1,7 +1,8 @@
 <script>
  import axios from 'axios';
  import rateLimit from 'axios-rate-limit';
- 
+ import ModuleConfigurator from "./ModuleConfigurator.vue"
+
  export default {
      name: "Configurator",
      data: function() {
@@ -21,7 +22,7 @@
          },
          selectedFilePaths: function () {
              /* TODO: implement this to read the config and return a list of file paths */
-             return ["/CAD/ASSEMBLY_CUBE_TEST/test1", "/CAD/ASSEMBLY_CUBE_TEST/test2", "/CAD/ASSEMBLY_CUBE_TEST/test1"]
+             return ["/CAD/ASSEMBLY_CUBE_TEST/test1", "/CAD/ASSEMBLY_CUBE_TEST/test2", "/CAD/ASSEMBLY_CUBE_TEST/test3"]
          }
      },
      methods: {
@@ -63,29 +64,74 @@
                  that.applications = applications 
              })
          },
-         getConfig(item) {
+         generateID() {
+             /*https://gist.github.com/gordonbrander/2230317 */
+             return '_' + Math.random().toString(36).substr(2, 9);
+         },
+         constructModulesInUse() {
+             this.modulesInUse = []
+             for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
+                 let newModule = {}
+                 Object.assign(newModule, this.modules.find(x => x.name == this.selectedApp.config.modules[i].name))
+                 newModule.key = this.generateID()
+                 newModule.fixedOptions = this.selectedApp.config.modules[i].fixedOptions
+                 newModule.applicationSpecific = true
+                 this.modulesInUse.push(newModule)
+             }
+         },
+         getAppConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
              axios.get(url).then(function (response) {
                  item.config = response.data
+                 item.config.loaded = true
+                 /* app specific stuff that belongs in the handler: */
+                 this.checkModuleConfigsLoaded()
+                 /*                  this.constructModulesInUse() */
+             }.bind(this))
+         },
+         getModuleConfig(item) {
+             /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
+             const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
+             return axios.get(url).then(function (response) {
+                 item.config = response.data
+                 item.config.loaded = true
              })
          },
-         checkConfigLoaded() {
-             console.log("checking if config is loaded...")
-             console.log(this.selectedApp)
+         checkAppConfigLoaded() {
              if (this.selectedApp.config.loaded === false) {
-                 console.log("no. loading")
-                 this.getConfig(this.selectedApp)
+                 this.getAppConfig(this.selectedApp)
+             } else {
+                 this.constructModulesInUse()
              }
+         },
+         checkModuleConfigsLoaded() {
+             let promises = []
+             this.selectedApp.config.modules.forEach( function (item) {
+                 const item_module = this.modules.find(x => x.name == item.name)
+                 if (item_module.config.loaded === false) {
+                     promises.push(this.getModuleConfig(item_module))
+                 }
+             }.bind(this))
+             Promise.all(promises).then( function () {
+                 this.constructModulesInUse()
+             }.bind(this))
+         },
+         addModule() {
+             let newModule = {}
+             Object.assign(newModule, this.modules[0])
+             newModule.key = this.generateID()
+             newModule.applicationSpecific = false
+             newModule.fixedOptions = {} /* should always be empty for a module created with this function */
+             this.modulesInUse.push(newModule)
+         },
+         updateSelectedModule(module) {
+             console.log("updateSelectedModule called")
+             console.log(module)
              
          },
-         testreq(url) {
-             /* for testing only */
-             let resp = {}
-             axios.get(url).then(function (response) {
-                 resp = response
-             })
-             return resp
+         deleteModule(module) {
+             this.modulesInUse = this.modulesInUse.filter(x => x.key !== module.key)
          }
      },
      created: function() {
@@ -93,8 +139,11 @@
      },
      watch: {
          selectedAppName: function() {
-             this.checkConfigLoaded()
+             this.checkAppConfigLoaded()
          }
+     },
+     components: {
+         ModuleConfigurator
      }
  }
                  
@@ -107,7 +156,7 @@
             <div class="col-md-8 p-4"> <!-- ALL SELECTION ITEMS -->
                 <form>
                     <div class="form-group">
-                        <label for="applicationSelect"> Select Application </label>
+                        <label for="applicationSelect" class="font-weight-bold"> Select Application </label>
                         <select class="form-control" id="applicationSelect" v-model="selectedAppName">
                             <option v-for="application in applications" :key="application.name"> {{ application.name }}
                             </option>
@@ -115,7 +164,10 @@
                         <small class="form-text text-muted" v-if="selectedApp"> {{ selectedApp.config.description }} </small>
                     </div>
                     <hr/>
-                    <p> Configure Modules: </p>
+                    <p class="font-weight-bold"> Configure Modules: </p>
+                    <module-configurator v-for="module in modulesInUse" v-bind:key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
+                    <hr>
+                    <button type="button" class="btn btn-outline-primary"  v-on:click="addModule">Add Module</button>
                 </form>
             </div>
             <div class="col-md-4 card p-4"> <!-- A LIST OF INCLUDED FILES -->
@@ -123,6 +175,7 @@
                 <ul class="list-group">
                     <li class="list-group-item" v-for="item in selectedFilePaths" v-bind:key="item"> {{ item }} </li>
                 </ul>
+                <hr>
                 <button type="button" class="btn btn-primary">Download ZIP</button>
             </div>
         </div>
