@@ -12,6 +12,8 @@
     "axios-rate-limit": "^1.2.1",
     "bootstrap": "^4.5.0",
     "core-js": "^3.6.5",
+    "file-saver": "^2.0.2",
+    "jszip": "^3.5.0",
     "promise": "^8.1.0",
     "semantic-ui-vue": "^0.11.0",
     "vue": "^2.6.11"

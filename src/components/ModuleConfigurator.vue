@@ -24,11 +24,15 @@
              axios.get(url).then(function (response) {
                  response.data.loaded = true
                  item.config = response.data
-                 console.log(item)
                  Object.entries(item.config.options).forEach(
                      function([key, value]) {
-                         Vue.set(item.config.options[key], 'selected', value.choices[0])
-                         /*                          console.log(item.config.options[key], value) */
+                         if (Object.prototype.hasOwnProperty.call(item.fixedOptions, key)) {
+                             Vue.set(item.config.options[key], 'selected', item.fixedOptions[key])
+                             item.config.options[key].fixed = true
+                         } else {
+                             Vue.set(item.config.options[key], 'selected', value.choices[0])
+                             item.config.options[key].fixed = false
+                         }
                      }
                  )
                  /* update our master modules list for future instances of this object */
@@ -36,13 +40,13 @@
              }.bind(this))
          },
          checkConfigLoaded() {
-             console.log("checking if config is loaded. selectedModule:", this.selectedModule)
+             /*              console.log("checking if config is loaded. selectedModule:", this.selectedModule) */
              if (this.selectedModule.config.loaded === false) {
                  this.getConfig(this.selectedModule)
              }
          },
          getSelectedModule: function () {
-             console.log("getting selected module")
+             /*              console.log("getting selected module") */
              let m = JSON.parse(JSON.stringify(this.modules.find(x => x.name == this.selectedModuleName)))
              m.fixedOptions = this.providedModule.fixedOptions
              m.applicationSpecific = this.providedModule.applicationSpecific
@@ -53,7 +57,7 @@
      },
      watch: {
          selectedModuleName: function() {
-             console.log('selectedModuleName changed. in watch handler:')
+             /*              console.log('selectedModuleName changed. in watch handler:') */
              this.getSelectedModule()
              this.checkConfigLoaded()
          },
@@ -83,7 +87,7 @@
                 <button class="btn btn-outline-danger float-right mb-2" type="button" v-on:click="$emit('delete-selected-module', selectedModule)">delete</button>
 
                 <!-- module select -->
-                <select class="form-control" v-bind:class="{'form-control-plaintext': providedModule.applicationSpecific}" id="moduleTypeSelect" v-model="selectedModuleName" v-bind:disabled="providedModule.applicationSpecific">
+                <select class="form-control" v-bind:class="{'form-control-plaintext custom-disabled': providedModule.applicationSpecific}" id="moduleTypeSelect" v-model="selectedModuleName" v-bind:disabled="providedModule.applicationSpecific">
                     <option v-for="module in modules" :key="module.name"> {{ module.name }} </option>
                 </select>
                 <small class="form-text text-muted" v-if="selectedModule"> {{ selectedModule.config.description }} </small>
@@ -91,7 +95,7 @@
                 <!-- module-level config options -->
                 <div class="container my-2 ml-4 pr-4" v-for="option in selectedModule.config.options" :key="option.displayName">
                     <label for="appSpecificSelect"> {{ option.displayName }}: </label>
-                    <select id="appSpecificSelect" class="form-control sm" v-model="option.selected">
+                    <select id="appSpecificSelect" class="form-control sm" v-model="option.selected" v-bind:disabled="option.fixed" v-bind:class="{'form-control-plaintext custom-disabled': option.fixed}" v-bind:style="{'background-color': option.fixed}">
                         <option v-for="choice in option.choices" :key="choice" > {{ choice }} </option>
                     </select>
                 </div>
@@ -100,3 +104,14 @@
     </div>
 </template>
 
+<style scoped>
+ .custom-disabled {
+     background-color: #dfdfdf !important;
+     opacity: 0.7 !important;
+     -moz-appearance: none !important;
+     -webkit-appearance: none !important;
+     appearance: none !important;
+     
+ }
+ 
+</style>

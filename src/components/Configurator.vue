@@ -1,10 +1,13 @@
 <script>
  import axios from 'axios';
  import rateLimit from 'axios-rate-limit';
+ import JSZip from 'jszip';
+ import Promise from 'promise';
+ import FileSaver from 'file-saver';
  import ModuleConfigurator from "./ModuleConfigurator.vue"
 
  export default {
-     name: "Configurator",
+     name: "ConfiguratorPanel",
      data: function() {
          return {
              repo: "AlecVercruysse/UC2-GIT",
@@ -13,7 +16,13 @@
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
              modulesInUse: [],
              selectedAppName: "None",
-             selectedFilePaths: {} /* TODO consider refactor on this, i'm not sure if files should be used as indexes  */
+             selectedFilePaths: [
+                 {
+                     path: "/Path/to/file",
+                     count: 1,
+                     displayName: "file"
+                 }
+             ], /* TODO consider refactor on this, i'm not sure if files should be used as indexes  */
          }
      },
      computed: {
@@ -22,7 +31,7 @@
              return selectedApp
          },
          containsDuplicateFiles: function() {
-             return Object.values(this.selectedFilePaths).some(x => x > 1)
+             return this.selectedFilePaths.some(x => x.count > 1)
          }
      },
      methods: {
@@ -61,7 +70,8 @@
                      }
                  })
                  that.modules = modules
-                 that.applications = applications 
+                 that.applications = applications
+                 that.$emit('loading-done')
              })
          },
          generateID() {
@@ -75,7 +85,7 @@
                  newModule.key = this.generateID()
                  newModule.fixedOptions = this.selectedApp.config.modules[i].fixedOptions
                  newModule.applicationSpecific = true
-                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
+                 /*                  console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule) */
                  this.modulesInUse.push(newModule)
              }
          },
@@ -99,30 +109,28 @@
          addModule() {
              let newModule = JSON.parse(JSON.stringify(this.modules[0]))
              newModule.key = this.generateID()
-             console.log('generating unique ID in addModule():', newModule.key)
              newModule.applicationSpecific = false
              newModule.fixedOptions = {} /* should always be empty for a module created with this function */
              this.modulesInUse.push(newModule)
          },
          updateSelectedModule(module) {
-             console.log("updateSelectedModule called: ", module)
              let oldModuleIndex = this.modulesInUse.findIndex(x => x.key === module.key)
              /* vue wont detect Object.assign since it changes the array at an index: https://vuejs.org/v2/guide/reactivity.html#For-Arrays */
              this.modulesInUse.splice(oldModuleIndex, 1, module)
          },
          updateSTLFileList() {
-             this.selectedFilePaths = {}
+             this.selectedFilePaths = []
              for(let modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
                  const module = this.modulesInUse[modIdx]
                  if (module.config.loaded) {
                      /* first load in fixed files:  */
-                     module.config.fixedFiles.forEach( function (fname) {
-                         this.addFileToSTLFileList(fname)
+                     module.config.fixedFiles.forEach( function (fpath) {
+                         this.addFileToSTLFileList(fpath, module)
                      }.bind(this))
                      /* now load in dynamic files */
                      module.config.dynamicFiles.forEach( function (file) {
                          if (this.shouldIncludeFile(file, module)) {
-                             this.addFileToSTLFileList(file.path)
+                             this.addFileToSTLFileList(file.path, module)
                          }
                      }.bind(this))
                  }
@@ -136,15 +144,42 @@
              }
              return true
          },
-         addFileToSTLFileList(fname) {
-             if (Object.prototype.hasOwnProperty.call(this.selectedFilePaths, fname)) {
-                 this.selectedFilePaths[fname]++
+         addFileToSTLFileList(fpath, module) {
+             const modulePath = module.path.split('/').filter(x => x != 'config.json').join('/')
+             const idx = this.selectedFilePaths.findIndex(f => f.path == fpath)
+             if (idx != -1) {
+                 this.selectedFilePaths[idx].count ++ /* TODO: check if this is reactive */
              } else {
-                 this.selectedFilePaths[fname] = 1
+                 const path = fpath.split('/')
+                 this.selectedFilePaths.push({
+                     path: modulePath + '/' + fpath,
+                     count: 1,
+                     displayName: path[path.length - 1]
+                 })
              }
          },
          deleteModule(module) {
              this.modulesInUse = this.modulesInUse.filter(x => x.key !== module.key)
+         },
+         downloadZIP() {
+             this.$emit('loading')
+             const zip = new JSZip()
+             let promises = [] 
+             this.selectedFilePaths.forEach(file => {
+                 const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + file.path
+                 promises.push(axios.get(url, {
+                     responseType: 'blob'
+                 }
+                 ).then(response => {
+                     console.log(response)
+                     const content = new Blob([response.data])
+                     zip.folder("UC2-STL").file(file.displayName, content, {binary: true})
+                 }))
+             })
+             Promise.all(promises).then(() => zip.generateAsync({type:"blob"}).then(content => {
+                 FileSaver.saveAs(content, "UC2-STL.zip")
+                 this.$emit('loading-done')
+             }))
          }
      },
      created: function() {
@@ -170,7 +205,7 @@
 
 <template>
     <div>
-        <div class="container card-body"><h3>UC2-Configurator <br><small class="text-muted"> Configure and download all needed STL files </small></h3></div>
+        <div class="container card-body"><h3>UC2-Configurator <br><small class="text-muted"> Configure and download all required STL files </small></h3></div>
         <div class="row card-body">
             <div class="col-md-8 p-4"> <!-- ALL SELECTION ITEMS -->
                 <form>
@@ -183,7 +218,9 @@
                         <small class="form-text text-muted" v-if="selectedApp"> {{ selectedApp.config.description }} </small>
                     </div>
                     <hr/>
-                    <p class="font-weight-bold"> Configure Modules: </p>
+                    <p class="font-weight-bold"> Configure Modules: <br>
+                        <small class="text-muted"> Options in gray are fixed and required by the application's configuration. </small>
+                    </p>
                     <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
                     <hr>
                     <button type="button" class="btn btn-outline-primary"  v-on:click="addModule">Add Module</button>
@@ -192,10 +229,11 @@
             <div class="col-md-4 card p-4"> <!-- A LIST OF INCLUDED FILES -->
                 <p class="font-weight-bold">Files Needed:</p>
                 <ul class="list-group">
-                    <li class="list-group-item small" v-for="(count, item) in selectedFilePaths" v-bind:key="item"> {{ count }}x {{ item }} </li>
+                    <li class="list-group-item small" v-for="item in selectedFilePaths" v-bind:key="item.path"> {{ item.count }}x {{ item.displayName }} </li>
                 </ul>
                 <hr>
-                <button type="button" class="btn btn-primary">Download ZIP</button>
+                
+                <button type="button" class="btn btn-primary" v-on:click="downloadZIP">Download ZIP</button>
                 <p class="small text-danger my-4" v-if="containsDuplicateFiles">Warning: Your configure requires multiple copies of a file. The ZIP comes with a single copy of each. Please remember to print all files! </p>
             </div>
         </div>
