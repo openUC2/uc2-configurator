@@ -71,8 +71,7 @@
          constructModulesInUse() {
              this.modulesInUse = []
              for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
-                 let newModule = {}
-                 Object.assign(newModule, this.modules.find(x => x.name == this.selectedApp.config.modules[i].name))
+                 let newModule = JSON.parse(JSON.stringify(this.modules.find(x => x.name == this.selectedApp.config.modules[i].name)))
                  newModule.key = this.generateID()
                  newModule.fixedOptions = this.selectedApp.config.modules[i].fixedOptions
                  newModule.applicationSpecific = true
@@ -98,14 +97,15 @@
              }
          },
          addModule() {
-             let newModule = {}
-             Object.assign(newModule, this.modules[0])
+             let newModule = JSON.parse(JSON.stringify(this.modules[0]))
              newModule.key = this.generateID()
+             console.log('generating unique ID in addModule():', newModule.key)
              newModule.applicationSpecific = false
              newModule.fixedOptions = {} /* should always be empty for a module created with this function */
              this.modulesInUse.push(newModule)
          },
          updateSelectedModule(module) {
+             console.log("updateSelectedModule called: ", module)
              let oldModuleIndex = this.modulesInUse.findIndex(x => x.key === module.key)
              /* vue wont detect Object.assign since it changes the array at an index: https://vuejs.org/v2/guide/reactivity.html#For-Arrays */
              this.modulesInUse.splice(oldModuleIndex, 1, module)
@@ -184,7 +184,7 @@
                     </div>
                     <hr/>
                     <p class="font-weight-bold"> Configure Modules: </p>
-                    <module-configurator v-for="module in modulesInUse" v-bind:key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
+                    <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
                     <hr>
                     <button type="button" class="btn btn-outline-primary"  v-on:click="addModule">Add Module</button>
                 </form>

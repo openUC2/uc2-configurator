@@ -7,7 +7,8 @@
      name: "ModuleConfigurator",
      data: function() {
          return { 
-             selectedModuleName: this.providedModule.name
+             selectedModuleName: this.providedModule.name,
+             selectedModule: {}
          }
      },
      props: {
@@ -21,34 +22,39 @@
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
              axios.get(url).then(function (response) {
+                 response.data.loaded = true
                  item.config = response.data
-                 item.config.loaded = true
+                 console.log(item)
                  Object.entries(item.config.options).forEach(
                      function([key, value]) {
                          Vue.set(item.config.options[key], 'selected', value.choices[0])
                          /*                          console.log(item.config.options[key], value) */
                      }
                  )
-             })
+                 /* update our master modules list for future instances of this object */
+                 this.modules.find(x => x.name == this.selectedModuleName).config = response.data
+             }.bind(this))
          },
          checkConfigLoaded() {
+             console.log("checking if config is loaded. selectedModule:", this.selectedModule)
              if (this.selectedModule.config.loaded === false) {
                  this.getConfig(this.selectedModule)
              }
          },
-     },
-     computed: {
-         selectedModule: function () {
-             let m = this.modules.find(x => x.name == this.selectedModuleName)
+         getSelectedModule: function () {
+             console.log("getting selected module")
+             let m = JSON.parse(JSON.stringify(this.modules.find(x => x.name == this.selectedModuleName)))
              m.fixedOptions = this.providedModule.fixedOptions
              m.applicationSpecific = this.providedModule.applicationSpecific
              /* todo consider refactoring to automatically bring any extra parameters from the initial passed object to this new one*/
              m.key = this.providedModule.key
-             return m
-         }
+             this.selectedModule = m
+         },
      },
      watch: {
          selectedModuleName: function() {
+             console.log('selectedModuleName changed. in watch handler:')
+             this.getSelectedModule()
              this.checkConfigLoaded()
          },
          selectedModule: {
@@ -59,9 +65,11 @@
          }
      },
      created: function () {
+         this.getSelectedModule()
          this.checkConfigLoaded() /* load config of default object on creation */
      }
  }
+ 
 </script>
    
 
