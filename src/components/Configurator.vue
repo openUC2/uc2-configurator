@@ -140,9 +140,10 @@
          },
          addFileToSTLFileList(fpath, module) {
              const modulePath = module.path.split('/').filter(x => x != 'config.json').join('/')
-             const idx = this.selectedFilePaths.findIndex(f => f.path == fpath)
+             const splitFpath = fpath.split('/')
+             const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1]) /* ASSUMPTION: duplicate file names refer to the same file */
              if (idx != -1) {
-                 this.selectedFilePaths[idx].count ++ /* TODO: check if this is reactive */
+                 this.selectedFilePaths[idx].count ++
              } else {
                  const path = fpath.split('/')
                  this.selectedFilePaths.push({
