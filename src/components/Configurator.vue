@@ -16,13 +16,7 @@
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
              modulesInUse: [],
              selectedAppName: "None",
-             selectedFilePaths: [
-                 {
-                     path: "/Path/to/file",
-                     count: 1,
-                     displayName: "file"
-                 }
-             ], /* TODO consider refactor on this, i'm not sure if files should be used as indexes  */
+             selectedFilePaths: []
          }
      },
      computed: {
