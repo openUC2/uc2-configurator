@@ -5,7 +5,7 @@
 	<ConfiguratorPanel v-on:loading-done="loading = false" v-on:loading="loading = true"> </ConfiguratorPanel>
     </div>
      <div class="container text-center"><span class="text-muted">
-        Alec Vercruysse &middot; <a href="https://github.com/AlecVercruysse/uc2-configurator">github</a>
+        Alec Vercruysse &middot; <a href="https://github.com/AlecVercruysse/uc2-configurator">github</a> <br> Inspired by Kaspar Emanuel's <a href="https://gitlab.com/openflexure/ofm-stl-selector/">ofm-stl-selector</a>
     </span></div>
     <footer class="page-foooter fixed-bottom">
         <div class="alert alert-primary" role="alert" v-if="loading">
