@@ -119,12 +119,12 @@
                  if (module.config.loaded) {
                      /* first load in fixed files:  */
                      module.config.fixedFiles.forEach( function (fpath) {
-                         this.addFileToSTLFileList(fpath, module)
+                         this.addFileToSTLFileList(fpath)
                      }.bind(this))
                      /* now load in dynamic files */
                      module.config.dynamicFiles.forEach( function (file) {
                          if (this.shouldIncludeFile(file, module)) {
-                             this.addFileToSTLFileList(file.path, module)
+                             this.addFileToSTLFileList(file.path)
                          }
                      }.bind(this))
                  }
@@ -138,16 +138,15 @@
              }
              return true
          },
-         addFileToSTLFileList(fpath, module) {
-             const modulePath = module.path.split('/').filter(x => x != 'config.json').join('/')
+         addFileToSTLFileList(fpath) {
              const splitFpath = fpath.split('/')
-             const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1]) /* ASSUMPTION: duplicate file names refer to the same file */
+             const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1])
              if (idx != -1) {
                  this.selectedFilePaths[idx].count ++
              } else {
                  const path = fpath.split('/')
                  this.selectedFilePaths.push({
-                     path: modulePath + '/' + fpath,
+                     path: '/' + fpath,
                      count: 1,
                      displayName: path[path.length - 1]
                  })
