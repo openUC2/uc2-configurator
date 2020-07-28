@@ -10,7 +10,7 @@
      name: "ConfiguratorPanel",
      data: function() {
          return {
-             repo: "AlecVercruysse/UC2-GIT",
+             repo: "bionanoimaging/UC2-GIT",
              modules: [],
              applications: [],
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
@@ -71,22 +71,23 @@
          generateID() {
              /*https://gist.github.com/gordonbrander/2230317 */
              return '_' + Math.random().toString(36).substr(2, 9);
-         },
+         }, 
          constructModulesInUse() {
              this.modulesInUse = []
              for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
-                 let newModule = JSON.parse(JSON.stringify(this.modules.find(x => x.name == this.selectedApp.config.modules[i].name)))
+                 let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.modules[i].name}))
                  newModule.key = this.generateID()
+                 newModule.price = this.selectedApp.config.modules[i].price
                  newModule.fixedOptions = this.selectedApp.config.modules[i].fixedOptions
                  newModule.applicationSpecific = true
-                 /*                  console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule) */
+                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule) 
                  this.modulesInUse.push(newModule)
              }
          },
          getAppConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
-             axios.get(url).then(function (response) {
+             axios.get(url).then(function (response) { // here we have all the modules!
                  item.config = response.data
                  item.config.loaded = true
                  /* app specific stuff that belongs in the handler: */
@@ -114,7 +115,7 @@
          },
          updateSTLFileList() {
              this.selectedFilePaths = []
-             for(let modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
+             for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
                  const module = this.modulesInUse[modIdx]
                  if (module.config.loaded) {
                      /* first load in fixed files:  */
