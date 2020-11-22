@@ -6,7 +6,7 @@
  export default {
      name: "ModuleConfigurator",
      data: function() {
-         return { 
+         return {
              selectedModuleName: this.providedModule.name,
              selectedModule: {}
          }
@@ -26,13 +26,8 @@
                  item.config = response.data
                  Object.entries(item.config.options).forEach(
                      function([key, value]) {
-                         if (Object.prototype.hasOwnProperty.call(item.fixedOptions, key)) {
-                             Vue.set(item.config.options[key], 'selected', item.fixedOptions[key])
-                             item.config.options[key].fixed = true
-                         } else {
-                             Vue.set(item.config.options[key], 'selected', value.choices[0])
-                             item.config.options[key].fixed = false
-                         }
+                            Vue.set(item.config.options[key], 'selected', value.choices[0])
+                           item.config.options[key].fixed = false
                      }
                  )
                  /* update our master modules list for future instances of this object */
@@ -48,7 +43,6 @@
          getSelectedModule: function () {
              /*              console.log("getting selected module") */
              let m = JSON.parse(JSON.stringify(this.modules.find(x => x.name == this.selectedModuleName)))
-             m.fixedOptions = this.providedModule.fixedOptions
              m.applicationSpecific = this.providedModule.applicationSpecific
              /* todo consider refactoring to automatically bring any extra parameters from the initial passed object to this new one*/
              m.key = this.providedModule.key
@@ -73,9 +67,9 @@
          this.checkConfigLoaded() /* load config of default object on creation */
      }
  }
- 
+
 </script>
-   
+
 
 <template>
     <div class="container card p-3 my-1">
@@ -91,14 +85,7 @@
                     <option v-for="module in modules" :key="module.name"> {{ module.name }} </option>
                 </select>
                 <small class="form-text text-muted" v-if="selectedModule"> {{ selectedModule.config.description }} </small>
-                
-                <!-- module-level config options -->
-                <div class="container my-2 ml-4 pr-4" v-for="option in selectedModule.config.options" :key="option.displayName">
-                    <label for="appSpecificSelect"> {{ option.displayName }}: </label>
-                    <select id="appSpecificSelect" class="form-control sm" v-model="option.selected" v-bind:disabled="option.fixed" v-bind:class="{'form-control-plaintext custom-disabled': option.fixed}" v-bind:style="{'background-color': option.fixed}">
-                        <option v-for="choice in option.choices" :key="choice" > {{ choice }} </option>
-                    </select>
-                </div>
+
             </div>
         </form>
     </div>
@@ -111,7 +98,7 @@
      -moz-appearance: none !important;
      -webkit-appearance: none !important;
      appearance: none !important;
-     
+
  }
- 
+
 </style>

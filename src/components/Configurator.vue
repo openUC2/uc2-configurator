@@ -10,7 +10,8 @@
      name: "ConfiguratorPanel",
      data: function() {
          return {
-             repo: "bionanoimaging/UC2-GIT",
+             repo: "bionanoimaging/UC2-GIT",// "bionanoimaging/UC2-GIT", //
+             branch: "dev_BD", //"master"
              modules: [],
              applications: [],
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
@@ -21,6 +22,7 @@
      },
      computed: {
          selectedApp: function() {
+           // We will first get the configuration for the selected APP - selectAPP is the one from the drop-down menu.
              const selectedApp = this.applications.find(x => x.name == this.selectedAppName)
              return selectedApp
          },
@@ -29,9 +31,10 @@
          }
      },
      methods: {
+       // This is called the very first time the browser loads the APP!
          getItems(that) {
              /* get all applications and modules without loading configs */
-             const url = "https://api.github.com/repos/" + this.repo + "/git/trees/master?recursive=1"
+             const url = "https://api.github.com/repos/" + this.repo + "/git/trees/" + this.branch + "?recursive=1"
              this.rateLimitedAxios.get(url).then(function (response) {
                  const modules = response.data.tree.filter(function (item) {
                      /* look for all ASSEMBLY folders which contain config.json, without loading the config */
@@ -50,7 +53,7 @@
                          item.name = path[path.length - 2]
                          item.config = { description:"",
                                          loaded: false
-                         } 
+                         }
                      })
                  }
                  computeProperties(modules)
@@ -71,22 +74,23 @@
          generateID() {
              /*https://gist.github.com/gordonbrander/2230317 */
              return '_' + Math.random().toString(36).substr(2, 9);
-         }, 
+         },
          constructModulesInUse() {
+           // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
              this.modulesInUse = []
              for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
                  let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.modules[i].name}))
                  newModule.key = this.generateID()
                  newModule.price = this.selectedApp.config.modules[i].price
-                 newModule.fixedOptions = this.selectedApp.config.modules[i].fixedOptions
                  newModule.applicationSpecific = true
-                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule) 
+                 newModule.partslist = this.selectedApp.config.modules[i].partslist
+                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
                  this.modulesInUse.push(newModule)
              }
          },
          getAppConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-             const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
+             const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
              axios.get(url).then(function (response) { // here we have all the modules!
                  item.config = response.data
                  item.config.loaded = true
@@ -105,31 +109,29 @@
              let newModule = JSON.parse(JSON.stringify(this.modules[0]))
              newModule.key = this.generateID()
              newModule.applicationSpecific = false
-             newModule.fixedOptions = {} /* should always be empty for a module created with this function */
+             //newModule.price = this.selectedApp.config.modules[i].price
+             newModule.applicationSpecific = true
+             //newModule.partslist = this.selectedApp.config.modules[i].partslist
              this.modulesInUse.push(newModule)
          },
-         updateSelectedModule(module) {
+         updateSelectedModule(mymodule) {
              let oldModuleIndex = this.modulesInUse.findIndex(x => x.key === module.key)
              /* vue wont detect Object.assign since it changes the array at an index: https://vuejs.org/v2/guide/reactivity.html#For-Arrays */
-             this.modulesInUse.splice(oldModuleIndex, 1, module)
+             this.modulesInUse.splice(oldModuleIndex, 1, mymodule)
          },
          updateSTLFileList() {
              this.selectedFilePaths = []
-             const module = null
+             console.log("Number of modules in use: ", this.modulesInUse.length)
              for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
-                module = this.modulesInUse[modIdx]
-                if (module.config.loaded) {
-                     /* first load in fixed files:  */
-                     module.config.fixedFiles.forEach( function (fpath) {
-                         this.addFileToSTLFileList(fpath)
-                     }.bind(this))
-                     /* now load in dynamic files */
-                     module.config.dynamicFiles.forEach( function (file) {
-                         if (this.shouldIncludeFile(file, module)) {
-                             this.addFileToSTLFileList(file.path)
-                         }
-                     }.bind(this))
-                 }
+                 const module = this.modulesInUse[modIdx]
+                 console.log("Adding module:  ", module)
+                   /* now load in dynamic files */
+                  module.partslist.forEach(function (part) {
+                  console.log(part.githublink)
+                     if (part.is_printable) {
+                         this.addFileToSTLFileList(part.githublink)
+                     }
+                  }.bind(this))
              }
          },
          shouldIncludeFile(file, module) {
@@ -143,6 +145,7 @@
          addFileToSTLFileList(fpath) {
              const splitFpath = fpath.split('/')
              const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1])
+
              if (idx != -1) {
                  this.selectedFilePaths[idx].count ++
              } else {
@@ -160,17 +163,23 @@
          downloadZIP() {
              this.$emit('loading')
              const zip = new JSZip()
-             let promises = [] 
+             let promises = []
              this.selectedFilePaths.forEach(file => {
-                 const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + file.path
-                 promises.push(axios.get(url, {
-                     responseType: 'blob'
+                 const path = file.path.split('/')[file.path.split('/').length-1]
+                 const url = "https://raw.githubusercontent.com/" + this.repo + "/"+ this.branch +"/CAD/RAW/STL/" + path
+                 try {
+                   promises.push(axios.get(url, {
+                   responseType: 'blob'
                  }
                  ).then(response => {
                      console.log(response)
                      const content = new Blob([response.data])
                      zip.folder("UC2-STL").file(file.displayName, content, {binary: true})
                  }))
+                  }//end try
+               catch (e) {
+                 console.log(e)
+               }//end catch
              })
              Promise.all(promises).then(() => zip.generateAsync({type:"blob"}).then(content => {
                  FileSaver.saveAs(content, "UC2-STL.zip")
@@ -196,7 +205,7 @@
          ModuleConfigurator
      }
  }
- 
+
 </script>
 
 <template>
@@ -228,7 +237,7 @@
                     <li class="list-group-item small" v-for="item in selectedFilePaths" v-bind:key="item.path"> {{ item.count }}x {{ item.displayName }} </li>
                 </ul>
                 <hr>
-                
+
                 <button type="button" class="btn btn-primary" v-on:click="downloadZIP">Download ZIP</button>
                 <p class="small text-danger my-4" v-if="containsDuplicateFiles">Warning: Your configure requires multiple copies of a file. The ZIP comes with a single copy of each. Please remember to print all files! </p>
             </div>
