@@ -44,7 +44,7 @@
                  const applications = response.data.tree.filter(function (item) {
                      /* look for all ASSEMBLY folders which contain config.json, without loading the config */
                      const path = item.path.split('/')
-                     return (path[path.length - 1] == "config.json" && path[path.length - 2].includes("APP"))
+                     return (path[path.length - 1] == "config.json" && (path[path.length - 2].includes("APP") || path[path.length - 2].includes("ASSEMBLY")))
                  })
                  var computeProperties = function (list) {
                      /* just computes the name, and adds a skeleton "config" that will get filled out by loading later */
@@ -76,8 +76,20 @@
              return '_' + Math.random().toString(36).substr(2, 9);
          },
          constructModulesInUse() {
-           // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
+
              this.modulesInUse = []
+           // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
+           if (this.selectedApp.config.name.includes("ASSEMBLY")){
+               // Hacky, but should work for now
+                let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.name}))
+                 newModule.key = this.generateID()
+                 newModule.price = this.selectedApp.config.price
+                 newModule.applicationSpecific = false
+                 newModule.partslist = this.selectedApp.config.partslist
+                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
+                 this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
+           }
+           else{
              for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
                  let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.modules[i].name}))
                  newModule.key = this.generateID()
@@ -87,7 +99,18 @@
                  console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
                  this.modulesInUse.push(newModule)
              }
+             }
          },
+         getModuleConfig(item) {
+             /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
+             const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
+             axios.get(url).then(function (response) { // here we have all the modules!
+                 item.config = response.data
+                 item.config.loaded = true
+                 /* app specific stuff that belongs in the handler: */
+                 this.constructModulesInUse()
+             }.bind(this))
+         },         
          getAppConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
@@ -106,13 +129,15 @@
              }
          },
          addModule() {
-             let newModule = JSON.parse(JSON.stringify(this.modules[0]))
+             this.modulesInUse = []
+             let newModule = JSON.parse(JSON.stringify(this.modules))
              newModule.key = this.generateID()
              newModule.applicationSpecific = false
              //newModule.price = this.selectedApp.config.modules[i].price
-             newModule.applicationSpecific = true
-             //newModule.partslist = this.selectedApp.config.modules[i].partslist
-             this.modulesInUse.push(newModule)
+             //newModule.applicationSpecific = true
+             newModule.partslist = this.selectedApp.config.modules.partslist
+             this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
+             
          },
          updateSelectedModule(mymodule) {
              let oldModuleIndex = this.modulesInUse.findIndex(x => x.key === module.key)
@@ -123,10 +148,11 @@
              this.selectedFilePaths = []
              console.log("Number of modules in use: ", this.modulesInUse.length)
              for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
-                 const module = this.modulesInUse[modIdx]
-                 console.log("Adding module:  ", module)
+                 let mymodule = this.modulesInUse[modIdx]
+                 console.log("Adding module:  ", mymodule.name)
+                 console.log("Adding module:  ", mymodule.partslist)
                    /* now load in dynamic files */
-                  module.partslist.forEach(function (part) {
+                  mymodule.partslist.forEach(function (part) {
                   console.log(part.githublink)
                      if (part.is_printable) {
                          this.addFileToSTLFileList(part.name)
@@ -208,14 +234,14 @@
     <div>
         <div class="row">
             <p style="width:40px;"></p>
-            <img src="UC2_Logo-258x300.png" width="100">
+            <img src="UC2_Logo-258x300.png" width="86" height="100">
             <div class="container card-body"><h3>UC2-Configurator <br><small class="text-muted"> Configure and download all required STL files </small></h3></div>
         </div>            
         <div class="row card-body">
             <div class="col-md-8 p-4"> <!-- ALL SELECTION ITEMS -->
                 <form>
                     <div class="form-group">
-                        <label for="applicationSelect" class="font-weight-bold"> Select Application </label>
+                        <label for="applicationSelect" class="font-weight-bold"> Select Application or Module </label>
                         <select class="form-control" id="applicationSelect" v-model="selectedAppName">
                             <option v-for="application in applications" :key="application.name"> {{ application.name }}
                             </option>
