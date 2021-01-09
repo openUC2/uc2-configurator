@@ -14,13 +14,14 @@
      props: {
          modules: Array,
          providedModule: Object,
-         repo: String
+         repo: String,
+         branch: String
      },
      methods: {
          /*          todo move getConfig and checkConfigLoaded to another js file since they basically reuse the same code */
          getConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-             const url = "https://raw.githubusercontent.com/" + this.repo + "/master/" + item.path
+             const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
              axios.get(url).then(function (response) {
                  response.data.loaded = true
                  item.config = response.data

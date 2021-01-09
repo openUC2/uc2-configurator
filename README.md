@@ -26,3 +26,22 @@ npm run build
 ```
 npm run lint
 ```
+
+### Run local server in Python3
+
+```py
+cd ./dist
+python -m http.server 8000
+```
+
+
+# Upload to Netlify
+
+1. Use the UC2 account 
+2. Link to the UC2-Configurator Github: [https://github.com/bionanoimaging/uc2-configurator](https://github.com/bionanoimaging/uc2-configurator)
+3. 
+
+
+# Access it
+
+Go to [https://uc2configurator.netlify.app/](https://uc2configurator.netlify.app/)

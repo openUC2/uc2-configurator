@@ -11,7 +11,7 @@
      data: function() {
          return {
              repo: "bionanoimaging/UC2-GIT",// "bionanoimaging/UC2-GIT", //
-             branch: "dev_BD", //"master"
+             branch: "v3", //"master"
              modules: [],
              applications: [],
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
@@ -129,7 +129,7 @@
                   module.partslist.forEach(function (part) {
                   console.log(part.githublink)
                      if (part.is_printable) {
-                         this.addFileToSTLFileList(part.githublink)
+                         this.addFileToSTLFileList(part.name)
                      }
                   }.bind(this))
              }
@@ -142,25 +142,20 @@
              }
              return true
          },
-         addFileToSTLFileList(fpath) {
-             const splitFpath = fpath.split('/')
-             const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1])
-
-             if (idx != -1) {
-                 this.selectedFilePaths[idx].count ++
-             } else {
-                 const path = fpath.split('/')
-                 this.selectedFilePaths.push({
-                     path: '/' + fpath,
-                     count: 1,
-                     displayName: path[path.length - 1]
-                 })
-             }
+         addFileToSTLFileList(fname) {
+            this.filetype = '.stl'
+            this.prefix = 'UC2_'             
+            this.selectedFilePaths.push({
+                path: this.prefix+fname+this.filetype,
+                count: 1,
+                displayName: fname
+            })
          },
          deleteModule(module) {
              this.modulesInUse = this.modulesInUse.filter(x => x.key !== module.key)
          },
          downloadZIP() {
+             this.idx=0
              this.$emit('loading')
              const zip = new JSZip()
              let promises = []
@@ -174,7 +169,8 @@
                  ).then(response => {
                      console.log(response)
                      const content = new Blob([response.data])
-                     zip.folder("UC2-STL").file(file.displayName, content, {binary: true})
+                     zip.folder("UC2-Print_all_STLs_once").file(this.idx+"_"+file.displayName+".stl", content, {binary: true})
+                     this.idx++
                  }))
                   }//end try
                catch (e) {
@@ -226,7 +222,7 @@
                     <p class="font-weight-bold"> Configure Modules: <br>
                         <small class="text-muted"> Options in gray are fixed and required by the application's configuration. </small>
                     </p>
-                    <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
+                    <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-bind:branch="branch" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
                     <hr>
                     <button type="button" class="btn btn-outline-primary"  v-on:click="addModule">Add Module</button>
                 </form>
