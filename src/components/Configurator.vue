@@ -178,7 +178,7 @@
                }//end catch
              })
              Promise.all(promises).then(() => zip.generateAsync({type:"blob"}).then(content => {
-                 FileSaver.saveAs(content, "UC2-STL.zip")
+                 FileSaver.saveAs(content, "UC2-Print_all_STLs_once.zip")
                  this.$emit('loading-done')
              }))
          }
@@ -206,7 +206,11 @@
 
 <template>
     <div>
-        <div class="container card-body"><h3>UC2-Configurator <br><small class="text-muted"> Configure and download all required STL files </small></h3></div>
+        <div class="row">
+            <p style="width:40px;"></p>
+            <img src="UC2_Logo-258x300.png" width="100">
+            <div class="container card-body"><h3>UC2-Configurator <br><small class="text-muted"> Configure and download all required STL files </small></h3></div>
+        </div>            
         <div class="row card-body">
             <div class="col-md-8 p-4"> <!-- ALL SELECTION ITEMS -->
                 <form>
@@ -224,7 +228,7 @@
                     </p>
                     <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-bind:branch="branch" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
                     <hr>
-                    <button type="button" class="btn btn-outline-primary"  v-on:click="addModule">Add Module</button>
+                    <button type="button" class="btn btn-outline-info"  v-on:click="addModule">Add Module</button>
                 </form>
             </div>
             <div class="col-md-4 card p-4"> <!-- A LIST OF INCLUDED FILES -->
@@ -234,7 +238,7 @@
                 </ul>
                 <hr>
 
-                <button type="button" class="btn btn-primary" v-on:click="downloadZIP">Download ZIP</button>
+                <button type="button" class="btn btn-info" v-on:click="downloadZIP">Download ZIP</button>
                 <p class="small text-danger my-4" v-if="containsDuplicateFiles">Warning: Your configure requires multiple copies of a file. The ZIP comes with a single copy of each. Please remember to print all files! </p>
             </div>
         </div>
