@@ -111,17 +111,7 @@
                  newModule.partslist = this.selectedApp.config.config.partslist
                  console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
                  this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
-         },
-         getModuleConfig(item) {
-             /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-             const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
-             axios.get(url).then(function (response) { // here we have all the modules!
-                 item.config = response.data
-                 item.config.loaded = true
-                 /* app specific stuff that belongs in the handler: */
-                 this.constructModuleInUse()
-             }.bind(this))
-         },         
+         },       
          getAppConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
@@ -139,18 +129,12 @@
                  this.constructModulesInUse()
              }
          },
-         addModule() {
-             this.modulesInUse = []
+        addModule() {
              let newModule = JSON.parse(JSON.stringify(this.modules[0]))
-             this.selectedApp.config = JSON.parse(JSON.stringify(this.modules[0]))
-             this.getModuleConfig(this.selectedApp.config)
              newModule.key = this.generateID()
              newModule.applicationSpecific = false
-             newModule.price = this.selectedApp.config.config.price
-             //newModule.applicationSpecific = true
-             newModule.partslist = this.selectedApp.config.config.partslist
-             this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
-             
+             newModule.fixedOptions = {} /* should always be empty for a module created with this function */
+             this.modulesInUse.push(newModule)
          },
          updateSelectedModule(mymodule) {
              let oldModuleIndex = this.modulesInUse.findIndex(x => x.key === module.key)
@@ -163,10 +147,9 @@
              for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
                  let mymodule = this.modulesInUse[modIdx]
                  console.log("Adding module:  ", mymodule.name)
-                 console.log("Adding module:  ", mymodule.partslist)
+                 console.log("Adding module:  ", mymodule.config.partslist)
                    /* now load in dynamic files */
-                  mymodule.partslist.forEach(function (part) {
-                  console.log(part.githublink)
+                  mymodule.config.partslist.forEach(function (part) {
                      if (part.is_printable) {
                          this.addFileToSTLFileList(part.name)
                      }

@@ -1,7 +1,7 @@
 
 <script>
  import axios from 'axios';
- import Vue from 'vue'
+ //import Vue from 'vue'
 
  export default {
      name: "ModuleConfigurator",
@@ -25,12 +25,14 @@
              axios.get(url).then(function (response) {
                  response.data.loaded = true
                  item.config = response.data
+                 /*
                  Object.entries(item.config.options).forEach(
                      function([key, value]) {
                             Vue.set(item.config.options[key], 'selected', value.choices[0])
                            item.config.options[key].fixed = false
                      }
                  )
+                 */
                  /* update our master modules list for future instances of this object */
                  this.modules.find(x => x.name == this.selectedModuleName).config = response.data
              }.bind(this))
