@@ -76,7 +76,6 @@
              return '_' + Math.random().toString(36).substr(2, 9);
          },
          constructModulesInUse() {
-
              this.modulesInUse = []
            // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
            if (this.selectedApp.config.name.includes("ASSEMBLY")){
@@ -101,6 +100,18 @@
              }
              }
          },
+         constructModuleInUse() {
+             this.modulesInUse = []
+                // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
+               // Hacky, but should work for now
+                let newModule = JSON.parse(JSON.stringify(this.selectedApp.config))
+                 newModule.key = this.generateID()
+                 newModule.price = this.selectedApp.config.config.price
+                 newModule.applicationSpecific = false
+                 newModule.partslist = this.selectedApp.config.config.partslist
+                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
+                 this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
+         },
          getModuleConfig(item) {
              /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
              const url = "https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + "/" + item.path
@@ -108,7 +119,7 @@
                  item.config = response.data
                  item.config.loaded = true
                  /* app specific stuff that belongs in the handler: */
-                 this.constructModulesInUse()
+                 this.constructModuleInUse()
              }.bind(this))
          },         
          getAppConfig(item) {
@@ -130,12 +141,14 @@
          },
          addModule() {
              this.modulesInUse = []
-             let newModule = JSON.parse(JSON.stringify(this.modules))
+             let newModule = JSON.parse(JSON.stringify(this.modules[0]))
+             this.selectedApp.config = JSON.parse(JSON.stringify(this.modules[0]))
+             this.getModuleConfig(this.selectedApp.config)
              newModule.key = this.generateID()
              newModule.applicationSpecific = false
-             //newModule.price = this.selectedApp.config.modules[i].price
+             newModule.price = this.selectedApp.config.config.price
              //newModule.applicationSpecific = true
-             newModule.partslist = this.selectedApp.config.modules.partslist
+             newModule.partslist = this.selectedApp.config.config.partslist
              this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
              
          },
