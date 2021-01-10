@@ -44,7 +44,7 @@
                  const applications = response.data.tree.filter(function (item) {
                      /* look for all ASSEMBLY folders which contain config.json, without loading the config */
                      const path = item.path.split('/')
-                     return (path[path.length - 1] == "config.json" && (path[path.length - 2].includes("APP") || path[path.length - 2].includes("ASSEMBLY")))
+                     return (path[path.length - 1] == "config.json" && (path[path.length - 2].includes("APP"))) // || path[path.length - 2].includes("ASSEMBLY")))
                  })
                  var computeProperties = function (list) {
                      /* just computes the name, and adds a skeleton "config" that will get filled out by loading later */
@@ -78,7 +78,7 @@
          constructModulesInUse() {
              this.modulesInUse = []
            // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
-           if (this.selectedApp.config.name.includes("ASSEMBLY")){
+           if (this.selectedApp.config.name.includes("ASSEMBLX")){ // NOT ACTIVE YET!
                // Hacky, but should work for now
                 let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.name}))
                  newModule.key = this.generateID()
