@@ -176,6 +176,8 @@
          deleteModule(module) {
              this.modulesInUse = this.modulesInUse.filter(x => x.key !== module.key)
          },
+         deleteAll(){this.modulesInUse = []
+         },
          downloadZIP() {
              this.idx=0
              this.$emit('loading')
@@ -259,7 +261,8 @@
                     <li class="list-group-item small" v-for="item in selectedFilePaths" v-bind:key="item.path"> {{ item.count }}x {{ item.displayName }} </li>
                 </ul>
                 <hr>
-
+                <button type="button" class="btn btn-danger" v-on:click="deleteAll">Delete all</button>
+                <p style="height:4px;"></p>
                 <button type="button" class="btn btn-info" v-on:click="downloadZIP">Download ZIP</button>
                 <p class="small text-danger my-4" v-if="containsDuplicateFiles">Warning: Your configure requires multiple copies of a file. The ZIP comes with a single copy of each. Please remember to print all files! </p>
             </div>
