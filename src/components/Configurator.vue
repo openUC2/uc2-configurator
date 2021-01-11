@@ -147,9 +147,9 @@
              for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
                  let mymodule = this.modulesInUse[modIdx]
                  console.log("Adding module:  ", mymodule.name)
-                 console.log("Adding module:  ", mymodule.config.partslist)
+                 console.log("Adding module:  ", mymodule.partslist)
                    /* now load in dynamic files */
-                  mymodule.config.partslist.forEach(function (part) {
+                  mymodule.partslist.forEach(function (part) {
                      if (part.is_printable) {
                          this.addFileToSTLFileList(part.name)
                      }
