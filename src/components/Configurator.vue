@@ -13,6 +13,7 @@
              repo: "bionanoimaging/UC2-GIT",// "bionanoimaging/UC2-GIT", //
              branch: "v3", //"master"
              modules: [],
+             userProfilePic: '',
              applications: [],
              rateLimitedAxios: rateLimit(axios.create(), { maxRequests: 60, perMilliseconds: 60*60*1000}),
              modulesInUse: [],
@@ -107,6 +108,8 @@
                  item.config = response.data
                  item.config.loaded = true
                  /* app specific stuff that belongs in the handler: */
+                 //https://raw.githubusercontent.com/bionanoimaging/UC2-GIT/v3/APPLICATIONS/APP_Abbe_Setup/IMAGES/cover.png
+                 this.getImage("https://raw.githubusercontent.com/" + this.repo + "/" + this.branch + '/APPLICATIONS/' + item.name.split('/')[0]+"/IMAGES/cover.png")
                  this.constructModulesInUse()
              }.bind(this))
          },
@@ -133,15 +136,16 @@
              this.selectedFilePaths = []
              console.log("Number of modules in use: ", this.modulesInUse.length)
              for(var modIdx = 0; modIdx < this.modulesInUse.length; modIdx++) {
-                 let mymodule = this.modulesInUse[modIdx]
-                 console.log("Adding module:  ", mymodule.name)
-                 console.log("Adding module:  ", mymodule.partslist)
-                   /* now load in dynamic files */
-                  mymodule.partslist.forEach(function (part) {
-                     if (part.is_printable) {
-                         this.addFileToSTLFileList(part.name)
-                     }
-                  }.bind(this))
+                let mymodule = this.modulesInUse[modIdx]
+                console.log("Adding module:  ", mymodule.name)
+                console.log("Adding module:  ", mymodule.partslist)
+                // Add parts to the list if they are not none.. TODO: this is wrong behavious!
+                if (mymodule.partslist!=undefined){
+                mymodule.partslist.forEach(function (part) {
+                    if (part.is_printable) {
+                    this.addFileToSTLFileList(part.name)
+                }
+                }.bind(this))}
              }
          },
          shouldIncludeFile(file, module) {
@@ -168,6 +172,9 @@
                  })
              }
          },
+         getImage (path) {
+            this.userProfilePic = path
+            },
          addFileToSTLFileList2(fname) {
             this.filetype = '.stl'
             this.prefix = 'UC2_'             
@@ -254,6 +261,8 @@
                     <p class="font-weight-bold"> Configure Modules: <br>
                         <small class="text-muted"> Options in gray are fixed and required by the application's configuration. </small>
                     </p>
+                        <p v-if="userProfilePic"><img style="width:40%" :src="userProfilePic" alt=""></p>
+                        <p><a href="#" @click="getImage()"></a></p>
                     <module-configurator v-for="module in modulesInUse" :key="module.key" v-bind:providedModule="module" v-bind:modules="modules" v-bind:repo="repo" v-bind:branch="branch" v-on:update-selected-module="updateSelectedModule($event)" v-on:delete-selected-module="deleteModule($event)"></module-configurator>
                     <hr>
                     <button type="button" class="btn btn-outline-info"  v-on:click="addModule">Add Module</button>
