@@ -251,28 +251,19 @@ export default {
       let promises = [];
       this.selectedFilePaths.forEach((file) => {
         const path = file.path.split("/")[file.path.split("/").length - 1];
-        const url =
-          "https://raw.githubusercontent.com/" +
-          this.repo +
-          "/" +
-          this.branch +
-          "/CAD/RAW/STL/" +
-          path;
+        const url = "https://raw.githubusercontent.com/" +this.repo +"/" +this.branch +"/CAD/RAW/STL/" +path;
+        const count = file.count
         try {
-          promises.push(
-            axios
+          promises.push(axios
               .get(url, {
                 responseType: "blob",
               })
-              .then((response) => {
-                console.log(response);
+              .then((response) => {console.log(response);
                 const content = new Blob([response.data]);
-                zip
-                  .folder("UC2-Print_all_STLs_once")
-                  .file(this.idx + "_" + file.displayName + ".stl", content, {
-                    binary: true,
-                  });
-                this.idx++;
+                for(let i=0; i<count; i++){ // have multiple copies per file
+                  zip.folder("UC2-Print_all_STLs_once").file(this.idx + "_" + file.displayName + ".stl", content, {binary: true,});
+                  this.idx++;
+                }
               })
           );
         } catch (e) {
