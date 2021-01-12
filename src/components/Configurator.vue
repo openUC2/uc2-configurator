@@ -78,27 +78,15 @@
          constructModulesInUse() {
              this.modulesInUse = []
            // Construct the modules we want to use - get those properties from the JSON we want to propagate through the code..
-           if (this.selectedApp.config.name.includes("ASSEMBLX")){ // NOT ACTIVE YET!
-               // Hacky, but should work for now
-                let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.name}))
-                 newModule.key = this.generateID()
-                 newModule.price = this.selectedApp.config.price
-                 newModule.applicationSpecific = false
-                 newModule.partslist = this.selectedApp.config.partslist
-                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
-                 this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)))
-           }
-           else{
-             for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
-                 let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.modules[i].name}))
-                 newModule.key = this.generateID()
-                 newModule.price = this.selectedApp.config.modules[i].price
-                 newModule.applicationSpecific = true
-                 newModule.partslist = this.selectedApp.config.modules[i].partslist
-                 console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
-                 this.modulesInUse.push(newModule)
-             }
-             }
+            for(let i = 0; i < this.selectedApp.config.modules.length; i++) {
+                let newModule = JSON.parse(JSON.stringify({name: this.selectedApp.config.modules[i].name}))
+                newModule.key = this.generateID()
+                newModule.price = this.selectedApp.config.modules[i].price
+                newModule.applicationSpecific = true
+                newModule.partslist = this.selectedApp.config.modules[i].partslist
+                console.log("created app specific (fixed) module in constructModulesInUse(), pushing to modulesInUse", newModule)
+                this.modulesInUse.push(newModule)
+            }
          },
          constructModuleInUse() {
              this.modulesInUse = []
@@ -164,7 +152,23 @@
              }
              return true
          },
-         addFileToSTLFileList(fname) {
+         addFileToSTLFileList(fpath) {
+            this.filetype = '.stl'
+            this.prefix = 'UC2_'  
+             const splitFpath = fpath.split('/')
+             const idx = this.selectedFilePaths.findIndex(f => f.displayName == splitFpath[splitFpath.length - 1])
+             if (idx != -1) {
+                 this.selectedFilePaths[idx].count ++
+             } else {
+                 const path = fpath.split('/')
+                 this.selectedFilePaths.push({
+                     path: this.prefix+fpath+this.filetype, //'/' + fpath,
+                     count: 1,
+                     displayName: path[path.length - 1]
+                 })
+             }
+         },
+         addFileToSTLFileList2(fname) {
             this.filetype = '.stl'
             this.prefix = 'UC2_'             
             this.selectedFilePaths.push({
