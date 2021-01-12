@@ -193,9 +193,8 @@ export default {
               }
             }.bind(this)
           );
-        }
-        // TODO: Not sure why I have .config.partslist and .patslist
-        if ('partslist' in mymodule.config) {
+        }// TODO: Not sure why I have .config.partslist and .patslist
+        else if ('partslist' in mymodule.config) {
           mymodule.config.partslist.forEach(
             function (part) {
               if (part.is_printable) {
