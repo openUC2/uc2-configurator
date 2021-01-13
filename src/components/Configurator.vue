@@ -243,6 +243,7 @@ export default {
     },
     deleteAll() {
       this.modulesInUse = [];
+      this.getImage("")
     },
     downloadZIP() {
       this.idx = 0;
