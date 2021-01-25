@@ -147,7 +147,7 @@ export default {
               this.branch +
               "/APPLICATIONS/" +
               item.name.split("/")[0] +
-              "/IMAGES/cover.png"
+              "/IMAGES/cover.jpg"
           );
           this.constructModulesInUse();
         }.bind(this)
