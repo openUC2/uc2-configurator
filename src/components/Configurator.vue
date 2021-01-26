@@ -390,8 +390,8 @@ export default {
           Download ZIP
         </button>
         <p class="small text-danger my-4" v-if="containsDuplicateFiles">
-          Warning: Your configure requires multiple copies of a file. The ZIP
-          comes with a single copy of each. Please remember to print all files!
+          Attention: The ZIP file contains an STL-file 
+          for each printed part and can get large!!
         </p>
       </div>
     </div>
