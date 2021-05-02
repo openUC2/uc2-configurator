@@ -11,7 +11,7 @@ export default {
   data: function () {
     return {
       repo: "bionanoimaging/UC2-GIT", // "bionanoimaging/UC2-GIT", //
-      branch: "v3", //"master"
+      branch: "master", //"master"
       modules: [],
       userProfilePic: "",
       applications: [],
