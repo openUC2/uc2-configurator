@@ -124,8 +124,6 @@ export default {
       );
       this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)));
     },
-    https://github.com/bionanoimaging/UC2-GIT/raw/master/CAD/RAW/STL/10_Base_puzzle_v3.stl
-    https://github.com/bionanoimaging/UC2-GIT/raw/master/CAD/RAW/STL/UC2_10_Lid_1x1_v3.stl
     getAppConfig(item) {
       /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
       const url = "https://github.com/"+
