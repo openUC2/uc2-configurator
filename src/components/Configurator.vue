@@ -124,12 +124,13 @@ export default {
       );
       this.modulesInUse.push(JSON.parse(JSON.stringify(newModule)));
     },
+    https://github.com/bionanoimaging/UC2-GIT/raw/master/CAD/RAW/STL/10_Base_puzzle_v3.stl
+    https://github.com/bionanoimaging/UC2-GIT/raw/master/CAD/RAW/STL/UC2_10_Lid_1x1_v3.stl
     getAppConfig(item) {
       /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-      const url =
-        "https://raw.githubusercontent.com/" +
+      const url = "https://github.com/"+
         this.repo +
-        "/" +
+        "/raw/" +
         this.branch +
         "/" +
         item.path;
@@ -141,9 +142,9 @@ export default {
           /* app specific stuff that belongs in the handler: */
           //https://raw.githubusercontent.com/bionanoimaging/UC2-GIT/v3/APPLICATIONS/APP_Abbe_Setup/IMAGES/cover.png
           this.getImage(
-            "https://raw.githubusercontent.com/" +
+            "https://github.com/" +
               this.repo +
-              "/" +
+              "/raw/" +
               this.branch +
               "/APPLICATIONS/" +
               item.name.split("/")[0] +
