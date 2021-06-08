@@ -126,9 +126,10 @@ export default {
     },
     getAppConfig(item) {
       /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-      const url = "https://github.com/"+
+      const url =
+        "https://raw.githubusercontent.com/" +
         this.repo +
-        "/raw/" +
+        "/" +
         this.branch +
         "/" +
         item.path;
@@ -140,9 +141,9 @@ export default {
           /* app specific stuff that belongs in the handler: */
           //https://raw.githubusercontent.com/bionanoimaging/UC2-GIT/v3/APPLICATIONS/APP_Abbe_Setup/IMAGES/cover.png
           this.getImage(
-            "https://github.com/" +
+            "https://raw.githubusercontent.com/" +
               this.repo +
-              "/raw/" +
+              "/" +
               this.branch +
               "/APPLICATIONS/" +
               item.name.split("/")[0] +
