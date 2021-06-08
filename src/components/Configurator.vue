@@ -126,7 +126,7 @@ export default {
     },
     getAppConfig(item) {
       /* we prefer to grab directly from raw.githubusercontent.com as not to use up our rate limits with the api */
-      const url =
+      const url  = 
         "https://raw.githubusercontent.com/" +
         this.repo +
         "/" +
@@ -219,7 +219,7 @@ export default {
     },
     addFileToSTLFileList(fpath) {
       this.filetype = ".stl";
-      this.prefix = "UC2_";
+      this.prefix = "";
       const splitFpath = fpath.split("/");
       const idx = this.selectedFilePaths.findIndex(
         (f) => f.displayName == splitFpath[splitFpath.length - 1]
